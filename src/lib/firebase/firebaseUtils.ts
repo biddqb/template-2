@@ -52,3 +52,12 @@ export const uploadFile = async (file: File, path: string) => {
   await uploadBytes(storageRef, file);
   return getDownloadURL(storageRef);
 };
+
+export const getJobs = async () => {
+  const jobsRef = collection(db, 'jobs');
+  const snapshot = await getDocs(jobsRef);
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+};
