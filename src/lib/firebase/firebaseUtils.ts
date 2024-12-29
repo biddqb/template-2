@@ -11,8 +11,12 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  serverTimestamp,
+  query,
+  orderBy,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { Job } from "@/lib/types/job";
 
 // Auth functions
 export const logoutUser = () => signOut(auth);
@@ -55,9 +59,19 @@ export const uploadFile = async (file: File, path: string) => {
 
 export const getJobs = async () => {
   const jobsRef = collection(db, 'jobs');
-  const snapshot = await getDocs(jobsRef);
+  const snapshot = await getDocs(query(jobsRef, orderBy('createdAt', 'desc')));
   return snapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data()
-  }));
+  })) as Job[];
+};
+
+export const addJob = async (jobData: Partial<Job>) => {
+  const jobsRef = collection(db, 'jobs');
+  return addDoc(jobsRef, {
+    ...jobData,
+    categories: jobData.categories || [],
+    createdAt: serverTimestamp(),
+    status: 'Open'
+  });
 };

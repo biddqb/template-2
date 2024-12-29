@@ -1,19 +1,18 @@
-export interface Worker {
-  name: string;
-  photo: string;
-  rating: number;
-  totalReviews: number;
-  skills: string[];
-}
+import { Timestamp } from 'firebase/firestore';
 
 export interface Job {
-  id: number;
+  id: string;
   title: string;
+  categories: string[];
   location: string;
   pay: string;
-  taskType: string;
+  duration: string;
+  startTime: string;
   description: string;
-  worker: Worker;
-  availability: string;
-  status: 'Open' | 'Closed' | 'In Progress';
+  email: string;
+  userId: string;
+  userDisplayName?: string;
+  userPhotoURL?: string;
+  createdAt?: Timestamp;
+  status: 'Open' | 'Closed';
 } 

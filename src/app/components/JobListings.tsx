@@ -5,7 +5,6 @@ import { Job } from '@/lib/types/job';
 import { getJobs } from '@/lib/firebase/firebaseUtils';
 import JobFilters, { FilterState } from './JobFilters';
 import JobCard from './JobCard';
-import { SAMPLE_JOBS } from '@/lib/data/sampleJobs';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -35,12 +34,16 @@ export default function JobListings() {
 
   useEffect(() => {
     const fetchJobs = async () => {
-      // In a real app, you would fetch from Firebase
-      // const fetchedJobs = await getJobs();
-      setJobs(SAMPLE_JOBS);
-      setFilteredJobs(SAMPLE_JOBS);
-      setDisplayedJobs(SAMPLE_JOBS.slice(0, ITEMS_PER_PAGE));
-      setLoading(false);
+      try {
+        const fetchedJobs = await getJobs();
+        setJobs(fetchedJobs);
+        setFilteredJobs(fetchedJobs);
+        setDisplayedJobs(fetchedJobs.slice(0, ITEMS_PER_PAGE));
+      } catch (error) {
+        console.error('Error fetching jobs:', error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchJobs();
   }, []);
@@ -69,9 +72,9 @@ export default function JobListings() {
       );
     }
 
-    // Apply task type filter
+    // Apply category filter
     if (filters.taskType !== 'All') {
-      filtered = filtered.filter(job => job.taskType === filters.taskType);
+      filtered = filtered.filter(job => job.categories.includes(filters.taskType));
     }
 
     // Apply location filter
@@ -88,9 +91,8 @@ export default function JobListings() {
     }
 
     setFilteredJobs(filtered);
-    setDisplayedJobs(filtered.slice(0, ITEMS_PER_PAGE));
-    setPage(1);
-    setHasMore(filtered.length > ITEMS_PER_PAGE);
+    setDisplayedJobs(filtered.slice(0, ITEMS_PER_PAGE * page));
+    setHasMore(filtered.length > ITEMS_PER_PAGE * page);
   };
 
   const handleSortChange = (sortBy: string) => {
@@ -110,11 +112,12 @@ export default function JobListings() {
           return payA - payB;
         });
         break;
-      case 'rating':
-        sorted.sort((a, b) => b.worker.rating - a.worker.rating);
+      case 'date':
+        sorted.sort((a, b) => b.createdAt?.toDate() - a.createdAt?.toDate());
         break;
       default:
-        sorted.sort((a, b) => b.id - a.id);
+        // Default sort by newest
+        sorted.sort((a, b) => b.createdAt?.toDate() - a.createdAt?.toDate());
     }
     setFilteredJobs(sorted);
     setDisplayedJobs(sorted.slice(0, ITEMS_PER_PAGE * page));
